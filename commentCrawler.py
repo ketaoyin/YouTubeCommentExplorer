@@ -12,9 +12,20 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-# CHANGE THESE FOR DATASET SIZE
-maxComments = 200
+
+# DEFAULT DATASIZE PARAMETERS
+maxComments = 5000
 maxCommentsPerVideo = 100
+
+# CUSTOM DATASIZE PARAMETERS
+if len(sys.argv) >= 4:
+	param1 = sys.argv[2]
+	param2 = sys.argv[3]
+
+	if param1.isdigit() and param2.isdigit():
+		if int(param1) > 0 and int(param2) > 0:
+			maxComments = int(param1)
+			maxCommentsPerVideo = int(param2)
 
 # Variables
 userNameInput = sys.argv[1]
@@ -144,6 +155,8 @@ if __name__ == "__main__":
     print("\n\n\n")
     print(userNameInput + " ID: " + channelId)
     print(userNameInput + " Uploads Playlist ID: " + uploadsListId)
+    print("Max number of comments: " + str(maxComments))
+    print("Max number of comments per video: " + str(maxCommentsPerVideo))
     print("\n")
 
     # Find all videos in Uploads playlit
@@ -154,8 +167,9 @@ if __name__ == "__main__":
     
     items = uploadItems['items']
 
+    # Counter for number of videos comments are collected from
     vidNum = 1
-
+    # Counter for total comments collected from uploads playlist
     totalCommentsCount = 0
 
     # Find top level comments for each uploaded video
@@ -169,6 +183,7 @@ if __name__ == "__main__":
 
 	  	threads = commentThreads['items']
 
+	  	# Counter for comments collected from current video
 	  	commentsCount = 0
 
 		for thread in threads:
@@ -192,3 +207,5 @@ if __name__ == "__main__":
 
     file.close()
     print("Comment collection completed!")
+    print("Max number of comments: " + str(maxComments))
+    print("Total number of comments collected: " + str(totalCommentsCount))
