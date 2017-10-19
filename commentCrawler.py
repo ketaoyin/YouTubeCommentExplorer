@@ -12,6 +12,9 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 
+# CHANGE THESE FOR DATASET SIZE
+maxComments = 200
+maxCommentsPerVideo = 100
 
 # Variables
 userNameInput = sys.argv[1]
@@ -19,8 +22,6 @@ channelIdPart = 'snippet,contentDetails,statistics'
 playlistItemsPart = 'contentDetails'
 numVideos = 50
 commentThreadPart = 'snippet'
-maxComments = 100
-
 
 # The CLIENT_SECRETS_FILE variable specifies the name of a file that contains
 # the OAuth 2.0 information for this application, including its client_id and
@@ -95,14 +96,23 @@ def comment_threads_all_items_by_video_id(service, **kwargs):
 		**kwargs
 		).execute()
 
+	# Max number of pages to list
+	itemsPerPage = len(commentThreads['items'])
+	currPages = 1
+	maxPages = maxCommentsPerVideo / itemsPerPage
+	if maxCommentsPerVideo %  itemsPerPage != 0:
+		maxPages+=1
+
 	nextPageToken = commentThreads.get('nextPageToken')
 
-	while ('nextPageToken' in commentThreads):
+	while ('nextPageToken' in commentThreads and currPages <= maxPages):
 		nextPage = service.commentThreads().list(
 			pageToken=nextPageToken,
 			**kwargs
 			).execute()
 		commentThreads['items'] = commentThreads['items'] + nextPage['items']
+
+		currPages+=1
 
 		if 'nextPageToken' not in nextPage:
 		    commentThreads.pop('nextPageToken', None)
@@ -146,33 +156,38 @@ if __name__ == "__main__":
 
     vidNum = 1
 
-    commentCount = 0
+    totalCommentsCount = 0
 
     # Find top level comments for each uploaded video
     for video in items:
   		vidId = video['contentDetails']['videoId']
   		print(str(vidNum) + ": " + vidId + "\n")
 
-	  	commentThreads = comment_threads_list_by_video_id(service,
+	  	commentThreads = comment_threads_all_items_by_video_id(service,
 	  		part=commentThreadPart,
 	  		videoId=vidId)
 
 	  	threads = commentThreads['items']
 
+	  	commentsCount = 0
+
 		for thread in threads:
-			if (commentCount < maxComments):
+			if (totalCommentsCount < maxComments and commentsCount < maxCommentsPerVideo):
 		  		topLevelComment = thread['snippet']['topLevelComment']['snippet']['textOriginal']
 		  		cleanedComment = topLevelComment.encode('utf-8').strip()
+		  		updatedTime = thread['snippet']['topLevelComment']['snippet']['updatedAt']
 		  		
 		  		# Write to .csv file
-		  		writer.writerow([cleanedComment])
-		  		commentCount+=1
+		  		writer.writerow([cleanedComment, updatedTime])
+		  		totalCommentsCount+=1
+		  		commentsCount+=1
+
 		  	else:
 		  		break
 
   		vidNum+=1
 
-  		if (commentCount >= maxComments):
+  		if (totalCommentsCount >= maxComments):
   			break
 
     file.close()
