@@ -12,7 +12,6 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-
 # DEFAULT DATASIZE PARAMETERS
 maxComments = 5000
 maxCommentsPerVideo = 100
@@ -51,7 +50,6 @@ def get_authenticated_service():
 	credentials = flow.run_console()
 	return build(API_SERVICE_NAME, API_VERSION, credentials = credentials)
 
-
 def channels_list_by_username(service, **kwargs):
 	channelIList = service.channels().list(
 		**kwargs
@@ -63,14 +61,12 @@ def channels_list_by_username(service, **kwargs):
 
 	return channelIList
 
-
 def playlist_items_list_by_playlist_id(service, **kwargs):
 	items = service.playlistItems().list(
 		**kwargs
 		).execute()
 
 	return items
-
 
 def playlist_all_items_by_playlist_id(service, **kwargs):
 	items = service.playlistItems().list(
@@ -93,14 +89,12 @@ def playlist_all_items_by_playlist_id(service, **kwargs):
 
 	return items
 
-
 def comment_threads_list_by_video_id(service, **kwargs):
 	commentThreads = service.commentThreads().list(
 		**kwargs
 		).execute()
 
 	return commentThreads
-
 
 def comment_threads_all_items_by_video_id(service, **kwargs):
 	commentThreads = service.commentThreads().list(
@@ -131,7 +125,6 @@ def comment_threads_all_items_by_video_id(service, **kwargs):
 		    nextPageToken = nextPage['nextPageToken']
 
 	return commentThreads
-
 
 # Main
 if __name__ == "__main__":
